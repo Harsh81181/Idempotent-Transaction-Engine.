@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: distributed-payment-ledger
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/payment_ledger
+    username: root
+    password: Ha@210903
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
