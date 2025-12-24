@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.*;
@@ -55,7 +57,17 @@ public class Transaction {
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
     
+    @PrePersist
+    public void onCreate() {
+    	this.createdAt=Instant.now();
+    }
+    
     public void transitionTo(TransactionStatus newStatus) {
+    	Objects.requireNonNull(newStatus, "TransactionStatus cannot be null");
+
+        if (this.status == TransactionStatus.SUCCESS) {
+            throw new IllegalStateException("SUCCESS is a terminal state");
+        }
     	if(!this.status.canTransitionTo(newStatus)) {
     		throw new IllegalStateException(
     	            "Invalid transaction state transition: " +

@@ -23,5 +23,17 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
                 @Param("txnId") String txnId,
                 @Param("type") EntryType type
         );
+    
+    @Query("""
+            SELECT COALESCE(SUM(
+                CASE 
+                    WHEN l.entryType = 'CREDIT' THEN l.amount
+                    ELSE -l.amount
+                END
+            ), 0)
+            FROM LedgerEntry l
+            WHERE l.accountId = :accountId
+        """)
+        BigDecimal calculateBalanceFromLedger(String accountId);
 }
 

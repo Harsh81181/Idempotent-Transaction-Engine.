@@ -19,7 +19,7 @@ public class TransactionController {
 
     private final TransactionService service;
 
-    @PostMapping
+    @PostMapping("/transaction")
     public Transaction create(@RequestBody @Valid CreateTransactionRequest req) {
         return service.processTransaction(req);
     }
