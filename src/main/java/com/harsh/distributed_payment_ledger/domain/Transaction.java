@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(
     name = "transactions",
-    uniqueConstraints = @UniqueConstraint(columnNames = "external_txn_id")
+    uniqueConstraints = @UniqueConstraint(columnNames = "externalTxnId")
 )
 @Getter
 @Setter
@@ -36,14 +36,14 @@ public class Transaction {
     private Long id;
 
     // client-provided idempotency key
-    @Column(name = "external_txn_id", nullable = false, unique = true)
+    @Column(name = "externalTxnId", nullable = false, unique = true)
     private String externalTxnId;
 
     @Column(nullable = false)
-    private long fromAccountId;
+    private Long fromAccountId;
 
     @Column(nullable = false)
-    private long toAccountId;
+    private Long toAccountId;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
@@ -54,5 +54,15 @@ public class Transaction {
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+    
+    public void transitionTo(TransactionStatus newStatus) {
+    	if(!this.status.canTransitionTo(newStatus)) {
+    		throw new IllegalStateException(
+    	            "Invalid transaction state transition: " +
+    	            this.status + " → " + newStatus
+    	        );
+    	}
+    	this.status=newStatus;
+    }
 }
 
