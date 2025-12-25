@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.harsh.distributed_payment_ledger.domain.Account;
 import com.harsh.distributed_payment_ledger.dto.BalanceDrift;
 import com.harsh.distributed_payment_ledger.repository.AccountRepository;
 import com.harsh.distributed_payment_ledger.repository.LedgerEntryRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -20,7 +20,7 @@ public class ReconciliationService {
 	private final LedgerEntryRepository entryRepository;
 	private final AccountRepository accountRepository;
 	
-	@Transactional
+	@Transactional(readOnly = true)
 	public List<BalanceDrift> reconcileAllAcounts(){
 		List<Account> accounts= accountRepository.findAll();
 		List<BalanceDrift> drifts=new ArrayList<>();
