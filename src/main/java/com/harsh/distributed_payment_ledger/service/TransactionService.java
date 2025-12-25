@@ -4,6 +4,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.harsh.distributed_payment_ledger.domain.Account;
+import com.harsh.distributed_payment_ledger.domain.AuditEventType;
 import com.harsh.distributed_payment_ledger.domain.EntryType;
 import com.harsh.distributed_payment_ledger.domain.LedgerEntry;
 import com.harsh.distributed_payment_ledger.domain.Transaction;
@@ -25,6 +26,8 @@ public class TransactionService {
 	private final AccountRepository accountRepo;
 	private final TransactionRepository txnRepo;
 	private final LedgerService ledgerService;
+	private final AuditService auditService;
+
 
 	@Transactional
 	public Transaction processTransaction(CreateTransactionRequest request) {
@@ -48,6 +51,14 @@ public class TransactionService {
 					.toAccountId(req.toAccount())
 					.status(TransactionStatus.INITIATED)
 					.build());
+			
+			auditService.log(
+				    AuditEventType.TRANSACTION_INITIATED,
+				    "TRANSACTION",
+				    txn.getExternalTxnId(),
+				    "Transaction initiated"
+				);
+
 			return execute(txn);
 		} catch (DataIntegrityViolationException e) {
 			// Another request created it concurrently
@@ -105,8 +116,22 @@ public class TransactionService {
 		} catch (Exception e) {
 			txn.transitionTo(TransactionStatus.FAILED);
 			txnRepo.save(txn);
+			auditService.log(
+				    AuditEventType.TRANSACTION_FAILED,
+				    "TRANSACTION",
+				    txn.getExternalTxnId(),
+				    "Transaction failed: " + e.getMessage()
+				);
+
 			throw e;
 		}
+		auditService.log(
+			    AuditEventType.TRANSACTION_SUCCESS,
+			    "TRANSACTION",
+			    txn.getExternalTxnId(),
+			    "Transaction completed successfully"
+			);
+
 		return txn;
 	}
 

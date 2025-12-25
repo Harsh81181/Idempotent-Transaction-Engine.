@@ -1,0 +1,16 @@
+package com.harsh.distributed_payment_ledger.domain;
+
+public enum AuditEventType {
+    TRANSACTION_INITIATED,
+    TRANSACTION_SUCCESS,
+    TRANSACTION_FAILED,
+
+    LEDGER_DEBIT,
+    LEDGER_CREDIT,
+
+    BALANCE_UPDATED,
+
+    RECONCILIATION_DETECTED,
+    RECONCILIATION_AUTO_REPAIRED,
+    RECONCILIATION_MANUAL_REQUIRED
+}
