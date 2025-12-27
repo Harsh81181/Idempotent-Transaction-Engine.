@@ -173,4 +173,3 @@ This project was built to:
 ## Author
 
 Harsh Bhardwaj
-Just say the word.
