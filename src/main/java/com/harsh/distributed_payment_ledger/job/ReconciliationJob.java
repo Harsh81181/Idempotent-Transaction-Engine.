@@ -16,26 +16,30 @@ import com.harsh.distributed_payment_ledger.repository.AccountRepository;
 import com.harsh.distributed_payment_ledger.service.AuditService;
 import com.harsh.distributed_payment_ledger.service.ReconciliationService;
 
+import io.micrometer.core.instrument.Counter;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @EnableScheduling
 @AllArgsConstructor
+@Slf4j
 public class ReconciliationJob {
 	private static final BigDecimal MAX_AUTO_REPAIR_DRIFT =new BigDecimal("0.01");
 	private final AccountRepository accountRepository;
 	private final ReconciliationService service;
 	private final AuditService auditService;
 
-	
+	private final Counter driftDetectedCounter;
+	private final Counter autoRepairCounter;
 	@Scheduled(cron = "0 0 * * * ?")
 	public void runReconciliation() {
 		List<BalanceDrift> list=service.reconcileAllAcounts();
 		
 		if(!list.isEmpty()) {
 			list.forEach(d->{
-				System.err.println("Drift account found :- "+d);
-				
+				log.info("Drift account found :- "+d);
+				driftDetectedCounter.increment();
 				auditService.log(
 					    AuditEventType.RECONCILIATION_DETECTED,
 					    "ACCOUNT",
@@ -45,8 +49,9 @@ public class ReconciliationJob {
 
 				if(d.getDrift().abs().compareTo(MAX_AUTO_REPAIR_DRIFT)<=0) {
 					repairAccount(d);
+					autoRepairCounter.increment();
 				}else {
-					System.err.println(
+					log.info(
 		                    "Large drift detected, manual review required: " + d
 		                );
 					auditService.log(
